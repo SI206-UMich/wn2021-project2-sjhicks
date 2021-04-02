@@ -5,7 +5,7 @@ import os
 import csv
 import unittest
 
-
+ 
 def get_titles_from_search_results(filename):
     """
     Write a function that creates a BeautifulSoup object on "search_results.htm". Parse
@@ -15,7 +15,15 @@ def get_titles_from_search_results(filename):
     [('Book title 1', 'Author 1'), ('Book title 2', 'Author 2')...]
     """
 
-    pass
+    soup = BeautifulSoup(open('search_results.htm'), 'html.parser')
+    title_list = []
+    for book in soup.findAll('tr', itemtype = "http://schema.org/Book"):
+        items = book.findAll('span', itemprop = 'name')
+        title = items[0].string.strip()
+        author = items[1].string.strip()
+        title_list.append((title,author))
+    return title_list
+
 
 
 def get_search_links():
@@ -29,10 +37,22 @@ def get_search_links():
     Notice that you should ONLY add URLs that start with "https://www.goodreads.com/book/show/" to 
     your list, and , and be sure to append the full path to the URL so that the url is in the format 
     “https://www.goodreads.com/book/show/kdkd".
-
+    
     """
 
-    pass
+    urls_list = []
+    url = 'https://www.goodreads.com/search?q=fantasy&qid=NwUsLiA2Nc'
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    book = soup.find_all('a', class_= 'bookTitle', itemprop = 'url')
+    for book in books: 
+        new = book['href']
+        if new.startswith('/book/show/'):
+            sites = 'https://www.goodreads.com' +str(new)
+            urls_list.append(sites)
+    return url_list[:10]
+
+    
 
 
 def get_book_summary(book_url):
@@ -105,26 +125,29 @@ class TestCases(unittest.TestCase):
 
     def test_get_titles_from_search_results(self):
         # call get_titles_from_search_results() on search_results.htm and save to a local variable
-
+        title_lst = get_titles_from_search_results("search_results.htm")
         # check that the number of titles extracted is correct (20 titles)
-
+        self.assertEqual (len(title), 20)
         # check that the variable you saved after calling the function is a list
-
+        self.assertIsInstance(title, list)
         # check that each item in the list is a tuple
-
+        for title in title_lst:
+            self.assertIsInstance(title,tuple)
         # check that the first book and author tuple is correct (open search_results.htm and find it)
-
+            self.assertEqual(title_lst[0],('Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'))
         # check that the last title is correct (open search_results.htm and find it)
+	        self.assertEqual(title_lst[-1],('Harry Potter: The Prequel (Harry Potter, #0.5)', 'J.K. Rowling'))
 
     def test_get_search_links(self):
         # check that TestCases.search_urls is a list
-
+        self.assertIsIstance(TestCases.search_urls, list)
         # check that the length of TestCases.search_urls is correct (10 URLs)
-
-
+        self.assertEqual(len(TestCases.search_urls), 10)
         # check that each URL in the TestCases.search_urls is a string
+        for string in TestCases.search_urls:
+            self.assertIsInstance(string, str)
         # check that each URL contains the correct url for Goodreads.com followed by /book/show/
-
+            self.assertTrue(string.startswith('https://www.goodreads.com/book/show/'))
 
     def test_get_book_summary(self):
         # create a local variable – summaries – a list containing the results from get_book_summary()
